@@ -1,0 +1,84 @@
+name: "cdc-demo"
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    container_name: cdc-sqlserver
+    restart: unless-stopped
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Password1!
+      - MSSQL_PID=Standard
+    volumes:
+      - sqlvolume:/var/opt/mssql
+
+  postgres:
+    image: postgres:latest
+    container_name: cdc-postgres
+    hostname: cdc-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=testdb
+    ports:
+      - "5432:5432"
+    command: [ "postgres", "-c", "wal_level=logical" ]
+
+  zookeeper:
+    container_name: cdc-zookeeper
+    image: debezium/zookeeper:3.0.0.Final
+    ports:
+      - "2181:2181"
+      - "2888:2888"
+      - "3888:3888"
+
+  kafka:
+    container_name: cdc-kafka
+    image: debezium/kafka:3.0.0.Final
+    ports:
+      - "9092:9092"
+    links:
+      - zookeeper
+    environment:
+      - ZOOKEEPER_CONNECT=zookeeper:2181
+
+  kafka-ui:
+    container_name: cdc-kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "8081:8080"
+    depends_on:
+      - kafka
+    environment:
+      DYNAMIC_CONFIG_ENABLED: 'true'
+
+  kafka-connect:
+    container_name: cdc-kafka-connect
+    image: debezium/connect:3.0.0.Final
+    ports:
+      - "8083:8083"
+    links:
+      - kafka
+      - sqlserver
+      - postgres
+    environment:
+      - BOOTSTRAP_SERVERS=kafka:9092
+      - GROUP_ID=1
+      - CONFIG_STORAGE_TOPIC=cdc_demo_connect_configs
+      - OFFSET_STORAGE_TOPIC=cdc_demo_connect_offsets
+      - STATUS_STORAGE_TOPIC=cdc_demo_connect_statuses
+
+  debezium-ui:
+    image: debezium/debezium-ui:latest
+    platform: linux/amd64
+    container_name: cdc-debezium-ui
+    environment:
+      - KAFKA_CONNECT_URIS=http://kafka-connect:8083
+    ports:
+      - "8082:8080"
+    depends_on:
+      - kafka-connect
+volumes:
+  sqlvolume:
+

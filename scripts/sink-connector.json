@@ -1,0 +1,19 @@
+{
+  "name": "cdc-demo-sink-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.jdbc.JdbcSinkConnector",
+    "tasks.max": "1",
+    "topics.regex": "messages.*",
+    "table.name.format": "messages",
+    "connection.url": "jdbc:postgresql://cdc-postgres:5432/testdb",
+    "connection.username": "postgres",
+    "connection.password": "postgres",
+    "insert.mode": "upsert",
+    "schema.evolution": "basic",
+    "primary.key.mode": "record_value",
+    "primary.key.fields": "id",
+    "dialect.postgres.postgis.schema": "public",
+    "transforms": "unwrap",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
+  }
+}
