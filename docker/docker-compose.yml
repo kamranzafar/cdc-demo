@@ -8,7 +8,7 @@ services:
       - "1433:1433"
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=Password1!
+      - SA_PASSWORD=P4$$w0rd1!
       - MSSQL_PID=Standard
     volumes:
       - sqlvolume:/var/opt/mssql
@@ -24,6 +24,24 @@ services:
     ports:
       - "5432:5432"
     command: [ "postgres", "-c", "wal_level=logical" ]
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: cdc-clickhouse
+    hostname: cdc-clickhouse
+    ports:
+      - "9000:9000"
+      - "8123:8123"
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    depends_on:
+      - zookeeper
+      - kafka
+    environment:
+      - CLICKHOUSE_PASSWORD=changeme!
 
   zookeeper:
     container_name: cdc-zookeeper
@@ -61,7 +79,7 @@ services:
     links:
       - kafka
       - sqlserver
-      - postgres
+      - clickhouse
     environment:
       - BOOTSTRAP_SERVERS=kafka:9092
       - GROUP_ID=1

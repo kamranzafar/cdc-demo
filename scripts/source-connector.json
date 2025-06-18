@@ -5,7 +5,7 @@
     "database.hostname": "cdc-sqlserver",
     "database.port": "1433",
     "database.user": "sa",
-    "database.password": "Password1!",
+    "database.password": "P4$$w0rd1!",
     "database.names": "testdb",
     "table.include.list": "dbo.messages",
     "schema.history.internal.kafka.bootstrap.servers": "cdc-kafka:9092",
